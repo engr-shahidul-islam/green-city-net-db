@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Green City Net - ISP Billing Management</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="css/style.css">
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+brand: {
+50: '#ecfdf5',
+100: '#d1fae5',
+500: '#10b981',
+600: '#059669',
+700: '#047857',
+800: '#065f46',
+900: '#064e3b',
+}
+},
+fontFamily: {
+sans: ['Inter', 'sans-serif'],
+}
+}
+}
+}
+</script>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen flex flex-col text-slate-800 antialiased">
+
+<div id="app" class="flex-grow flex flex-col md:flex-row min-h-screen">
+
+<!-- Mobile Header Bar -->
+<div class="md:hidden bg-brand-800 text-white flex justify-between items-center p-4 shadow-md sticky top-0 z-30">
+<div class="flex items-center space-x-2">
+<i class="fa-solid fa-wifi text-brand-50 text-xl"></i>
+<span class="font-bold text-lg tracking-wide">Green City Net</span>
+</div>
+<button id="mobileMenuBtn" class="text-white hover:text-brand-100 p-1 focus:outline-none">
+<i class="fa-solid fa-bars text-2xl"></i>
+</button>
+</div>
+
+<!-- Navigation Sidebar -->
+<aside id="sidebar" class="hidden md:flex flex-col w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 z-20 transition-all duration-300">
+<!-- App Logo Header -->
+<div class="p-5 border-b border-slate-800 flex items-center space-x-3 bg-slate-950">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-brand-900/50">
+<i class="fa-solid fa-network-wired text-xl"></i>
+</div>
+<div>
+<h1 class="font-bold text-white tracking-wide text-lg leading-snug">Green City Net</h1>
+<p class="text-xs text-brand-500 font-medium">ISP Management System</p>
+</div>
+</div>
+
+<!-- Active User Profile Card -->
+<div class="px-4 py-3 bg-slate-800/60 mx-3 my-4 rounded-xl border border-slate-700/50 flex items-center justify-between">
+<div class="flex items-center space-x-3 overflow-hidden">
+<div class="w-8 h-8 rounded-full bg-brand-600/30 text-brand-50 flex items-center justify-center text-sm font-bold border border-brand-500/40">
+<span id="userAvatar">A</span>
+</div>
+<div class="truncate">
+<p id="navUsername" class="text-xs font-semibold text-slate-200 truncate">shahidul@gcn.net</p>
+<span id="navRoleBadge" class="inline-block text-[10px] px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-medium">Admin</span>
+</div>
+</div>
+<button id="logoutBtn" title="Logout" class="text-slate-400 hover:text-rose-400 p-1.5 transition-colors">
+<i class="fa-solid fa-right-from-bracket"></i>
+</button>
+</div>
+
+<!-- GitHub Sync Status Badge -->
+<div class="px-4 mb-2">
+<div id="githubStatusBadge" class="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800 text-xs text-slate-400 border border-slate-700/60">
+<span class="flex items-center space-x-2">
+<span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+<span id="syncText" class="font-medium">Local Storage Only</span>
+</span>
+<button onclick="switchTab('github-settings')" class="text-xs text-brand-400 hover:underline">Config</button>
+</div>
+</div>
+
+<!-- Navigation Links -->
+<nav class="flex-1 px-3 py-2 space-y-1 overflow-y-auto custom-scrollbar">
+<button onclick="switchTab('dashboard')" nav-target="dashboard" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors bg-brand-600 text-white">
+<i class="fa-solid fa-chart-line w-5 text-center"></i>
+<span>Dashboard / Search</span>
+</button>
+<button onclick="switchTab('new-customer')" nav-target="new-customer" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+<i class="fa-solid fa-user-plus w-5 text-center"></i>
+<span>New Customer</span>
+</button>
+
+<button onclick="switchTab('active-customers')" nav-target="active-customers" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+<i class="fa-solid fa-users-check w-5 text-center text-emerald-400"></i>
+<span>Active Customers</span>
+</button>
+
+<button onclick="switchTab('disconnected-customers')" nav-target="disconnected-customers" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+<i class="fa-solid fa-user-slash w-5 text-center text-rose-400"></i>
+<span>Disconnected</span>
+</button>
+
+<button onclick="switchTab('billing-collection')" nav-target="billing-collection" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+<i class="fa-solid fa-file-invoice-dollar w-5 text-center text-amber-400"></i>
+<span>Billing & History</span>
+</button>
+
+<div class="pt-4 border-t border-slate-800/80 my-2">
+<p class="px-3 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">System</p>
+</div>
+
+<button onclick="switchTab('activity-logs')" nav-target="activity-logs" class="nav-item admin-only w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+<i class="fa-solid fa-list-check w-5 text-center text-indigo-400"></i>
+<span>System Logs</span>
+</button>
+
+<button onclick="switchTab('admin-panel')" nav-target="admin-panel" class="nav-item admin-only w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+<i class="fa-solid fa-user-shield w-5 text-center text-purple-400"></i>
+<span>Admin Panel</span>
+</button>
+
+<button onclick="switchTab('github-settings')" nav-target="github-settings" class="nav-item admin-only w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white">
+<i class="fa-brands fa-github w-5 text-center text-teal-400"></i>
+<span>GitHub Storage API</span>
+</button>
+</nav>
+
+<div class="p-3 bg-slate-950 text-slate-500 text-[11px] text-center border-t border-slate-800">
+<span>Green City Net v2.5</span>
+</div>
+</aside>
+
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-slate-100 overflow-y-auto custom-scrollbar">
+<!-- Header Bar -->
+<header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+<div>
+<h2 id="pageTitle" class="text-xl font-bold text-slate-800">Dashboard & Quick Customer Search</h2>
+<p id="pageSubtitle" class="text-xs text-slate-500">Search customer records, view statistics and manage accounts</p>
+</div>
+<div class="flex items-center space-x-3 self-end sm:self-auto">
+<span id="currentDateTimeBadge" class="text-xs font-semibold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg border border-slate-200 flex items-center">
+<i class="fa-regular fa-clock mr-1.5 text-brand-600"></i>
+<span id="liveClock">Loading time...</span>
+</span>
+<button onclick="triggerGitHubSync()" title="Force Sync Data to GitHub" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-300 font-medium flex items-center transition">
+<i class="fa-solid fa-rotate text-brand-600 mr-1.5" id="syncIconBtn"></i>
+Sync GitHub
+</button>
+</div>
+</header>
+
+<!-- Dynamic Tab Content -->
+<div class="p-4 sm:p-6 flex-1 space-y-6">
+
+<!-- TAB 1: DASHBOARD -->
+<section id="tab-dashboard" class="tab-content space-y-6">
+<div class="bg-gradient-to-r from-brand-800 to-slate-900 rounded-2xl p-6 text-white shadow-xl">
+<div class="max-w-2xl mx-auto text-center space-y-3">
+<h3 class="text-2xl font-bold tracking-tight">Customer Information Search</h3>
+<p class="text-brand-100 text-xs sm:text-sm">Enter Customer Name, Phone, Address, or ID to view complete bill status, package info, due & paid history.</p>
+<div class="relative mt-4">
+<input type="text" id="homeSearchInput" onkeyup="handleHomeSearch()" placeholder="Type Customer Name, ID, Address, or Mobile Number..." class="w-full pl-11 pr-12 py-3.5 rounded-xl text-slate-900 bg-white placeholder-slate-400 font-medium text-sm focus:outline-none focus:ring-4 focus:ring-brand-400/50 shadow-inner">
+<i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-slate-400 text-lg"></i>
+<button onclick="clearHomeSearch()" class="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600">
+<i class="fa-solid fa-xmark text-lg"></i>
+</button>
+</div>
+</div>
+</div>
+
+<div id="homeSearchResultArea" class="hidden space-y-4">
+<div class="flex items-center justify-between">
+<h4 class="font-bold text-slate-800 flex items-center">
+<i class="fa-solid fa-list-check text-brand-600 mr-2"></i>
+Search Matches (<span id="searchCount">0</span>)
+</h4>
+<button onclick="clearHomeSearch()" class="text-xs text-rose-600 font-semibold hover:underline">Close Search</button>
+</div>
+<div id="searchResultsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+<div>
+<p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Customers</p>
+<h4 id="statTotal" class="text-2xl font-bold text-slate-800 mt-1">0</h4>
+<span class="text-[11px] text-brand-600 font-medium">Registered in Green City Net</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center text-xl">
+<i class="fa-solid fa-users"></i>
+</div>
+</div>
+
+<div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+<div>
+<p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Lines</p>
+<h4 id="statActive" class="text-2xl font-bold text-emerald-600 mt-1">0</h4>
+<span class="text-[11px] text-slate-400 font-medium">Currently online</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+<i class="fa-solid fa-wifi"></i>
+</div>
+</div>
+
+<div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+<div>
+<p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Disconnected</p>
+<h4 id="statDisconnected" class="text-2xl font-bold text-rose-600 mt-1">0</h4>
+<span class="text-[11px] text-rose-500 font-medium">Line inactive/pending</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+<i class="fa-solid fa-plug-circle-xmark"></i>
+</div>
+</div>
+
+<div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+<div>
+<p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">This Month Collection</p>
+<h4 id="statCollection" class="text-2xl font-bold text-slate-800 mt-1">৳ 0</h4>
+<span class="text-[11px] text-amber-600 font-medium" id="statDueSummary">৳0 Due pending</span>
+</div>
+<div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+<i class="fa-solid fa-money-bill-wave"></i>
+</div>
+</div>
+</div>
+
+<!-- Recent Table -->
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+<div class="p-5 border-b border-slate-100 flex justify-between items-center">
+<h3 class="font-bold text-slate-800 text-base">Recent Registered Customers</h3>
+<button onclick="switchTab('active-customers')" class="text-xs text-brand-600 font-semibold hover:underline">View All Active</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-slate-600">
+<thead class="bg-slate-50 text-xs text-slate-500 uppercase font-semibold border-b border-slate-200">
+<tr>
+<th class="py-3 px-4">Customer ID</th>
+<th class="py-3 px-4">Name & Mobile</th>
+<th class="py-3 px-4">Address</th>
+<th class="py-3 px-4">Package</th>
+<th class="py-3 px-4">Bill</th>
+<th class="py-3 px-4">Status</th>
+<th class="py-3 px-4 text-center">Action</th>
+</tr>
+</thead>
+<tbody id="recentCustomersTable" class="divide-y divide-slate-100"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- TAB 2: NEW CUSTOMER -->
+<section id="tab-new-customer" class="tab-content hidden max-w-4xl mx-auto">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+<div class="bg-gradient-to-r from-slate-900 to-brand-900 p-6 text-white">
+<h3 class="text-xl font-bold flex items-center">
+<i class="fa-solid fa-user-plus mr-3 text-brand-400"></i>
+New Customer Entry Form
+</h3>
+<p class="text-xs text-slate-300 mt-1">Register a new client in Green City Net network. System automatically generates Customer ID.</p>
+</div>
+<form id="newCustomerForm" onsubmit="handleCustomerSubmit(event)" class="p-6 space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Customer Full Name *</label>
+<div class="relative">
+<input type="text" id="custName" required placeholder="e.g., Md. Rahim Uddin" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+<i class="fa-solid fa-user absolute left-3.5 top-3 text-slate-400"></i>
+</div>
+</div>
+
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Mobile Number *</label>
+<div class="relative">
+<input type="tel" id="custPhone" required placeholder="017XXXXXXXX" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+<i class="fa-solid fa-phone absolute left-3.5 top-3 text-slate-400"></i>
+</div>
+</div>
+
+<div class="md:col-span-2">
+<label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Full Address *</label>
+<div class="relative">
+<input type="text" id="custAddress" required placeholder="House #12, Road #4, Green City Area, Dhaka" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+<i class="fa-solid fa-location-dot absolute left-3.5 top-3 text-slate-400"></i>
+</div>
+</div>
+
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Select Internet Package *</label>
+<select id="custPackage" onchange="updateDefaultBillAmount()" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm bg-white">
+<option value="5 Mbps Home Standard">5 Mbps Home Standard (৳500)</option>
+<option value="10 Mbps Turbo Speed">10 Mbps Turbo Speed (৳800)</option>
+<option value="15 Mbps Family Special">15 Mbps Family Special (৳1000)</option>
+<option value="20 Mbps Gamer Ultimate">20 Mbps Gamer Ultimate (৳1200)</option>
+<option value="30 Mbps Corporate Pro">30 Mbps Corporate Pro (৳1800)</option>
+<option value="Custom Fiber Package">Custom Fiber Package</option>
+</select>
+</div>
+
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Monthly Bill (৳) *</label>
+<div class="relative">
+<input type="number" id="custBill" required min="0" value="500" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+<i class="fa-solid fa-bangladeshi-taka-sign absolute left-3.5 top-3 text-slate-400"></i>
+</div>
+</div>
+
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Advanced Paid Amount (৳)</label>
+<div class="relative">
+<input type="number" id="custAdvance" min="0" value="0" placeholder="0" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+<i class="fa-solid fa-wallet absolute left-3.5 top-3 text-slate-400"></i>
+</div>
+</div>
+
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Connection Date & Time *</label>
+<div class="relative">
+<input type="datetime-local" id="custDateTime" required class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500 text-sm">
+<i class="fa-regular fa-calendar-check absolute left-3.5 top-3 text-slate-400"></i>
+</div>
+</div>
+</div>
+
+<div class="pt-4 border-t border-slate-200 flex justify-end space-x-3">
+<button type="reset" class="px-5 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Reset Form</button>
+<button type="submit" class="px-6 py-2.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-lg shadow-brand-600/30 transition flex items-center">
+<i class="fa-solid fa-check mr-2"></i> Save & Register Customer
+</button>
+</div>
+</form>
+</div>
+</section>
+
+<!-- TAB 3: ACTIVE CUSTOMERS -->
+<section id="tab-active-customers" class="tab-content hidden space-y-4">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<h3 class="text-lg font-bold text-slate-800 flex items-center">
+<i class="fa-solid fa-users-check text-emerald-600 mr-2"></i> Active Customers List
+</h3>
+<p class="text-xs text-slate-500">Manage all currently active clients, bill collection, and line options.</p>
+</div>
+<div class="w-full sm:w-72 relative">
+<input type="text" id="activeSearchInput" onkeyup="renderActiveCustomers()" placeholder="Search active customer..." class="w-full pl-9 pr-4 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-brand-500">
+<i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+</div>
+</div>
+
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-slate-600">
+<thead class="bg-slate-50 text-xs text-slate-500 uppercase font-semibold border-b border-slate-200">
+<tr>
+<th class="py-3 px-4">ID</th>
+<th class="py-3 px-4">Name / Phone</th>
+<th class="py-3 px-4">Address</th>
+<th class="py-3 px-4">Package</th>
+<th class="py-3 px-4">Monthly Bill</th>
+<th class="py-3 px-4">Connection Date</th>
+<th class="py-3 px-4 text-center">Actions</th>
+</tr>
+</thead>
+<tbody id="activeCustomersTable" class="divide-y divide-slate-100"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- TAB 4: DISCONNECTED CUSTOMERS -->
+<section id="tab-disconnected-customers" class="tab-content hidden space-y-4">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<h3 class="text-lg font-bold text-slate-800 flex items-center">
+<i class="fa-solid fa-user-slash text-rose-600 mr-2"></i> Disconnected Customers List
+</h3>
+<p class="text-xs text-slate-500">Customers with suspended or disconnected internet connections.</p>
+</div>
+<div class="w-full sm:w-72 relative">
+<input type="text" id="disconnectedSearchInput" onkeyup="renderDisconnectedCustomers()" placeholder="Search disconnected customer..." class="w-full pl-9 pr-4 py-2 rounded-xl text-xs border border-slate-300 focus:ring-2 focus:ring-rose-500">
+<i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+</div>
+</div>
+
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-slate-600">
+<thead class="bg-slate-50 text-xs text-slate-500 uppercase font-semibold border-b border-slate-200">
+<tr>
+<th class="py-3 px-4">ID</th>
+<th class="py-3 px-4">Name / Phone</th>
+<th class="py-3 px-4">Address</th>
+<th class="py-3 px-4">Package</th>
+<th class="py-3 px-4">Bill Amount</th>
+<th class="py-3 px-4">Disconnect Date</th>
+<th class="py-3 px-4 text-center">Actions</th>
+</tr>
+</thead>
+<tbody id="disconnectedCustomersTable" class="divide-y divide-slate-100"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- TAB 5: BILLING COLLECTION -->
+<section id="tab-billing-collection" class="tab-content hidden space-y-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+<h3 class="font-bold text-slate-800 text-base border-b border-slate-100 pb-3 flex items-center">
+<i class="fa-solid fa-hand-holding-dollar text-brand-600 mr-2"></i> Collect Monthly Bill
+</h3>
+<form id="billingCollectForm" onsubmit="handleBillCollection(event)" class="space-y-4">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Select Customer *</label>
+<select id="billCollectCustId" required onchange="autofillBillAmount()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white focus:ring-2 focus:ring-brand-500">
+<option value="">-- Choose Customer --</option>
+</select>
+</div>
+
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Billing Month *</label>
+<select id="billMonth" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">
+<option value="January">January</option>
+<option value="February">February</option>
+<option value="March">March</option>
+<option value="April">April</option>
+<option value="May">May</option>
+<option value="June">June</option>
+<option value="July">July</option>
+<option value="August">August</option>
+<option value="September">September</option>
+<option value="October">October</option>
+<option value="November">November</option>
+<option value="December">December</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Year *</label>
+<input type="number" id="billYear" required value="2026" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+</div>
+</div>
+
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Amount Paid (৳) *</label>
+<input type="number" id="billAmountPaid" min="0" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-emerald-700">
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Due Remaining (৳)</label>
+<input type="number" id="billAmountDue" min="0" value="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-rose-600">
+</div>
+</div>
+
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Payment Method</label>
+<select id="billPaymentMethod" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">
+<option value="Cash">Cash Hand Payment</option>
+<option value="bKash">bKash Mobile Money</option>
+<option value="Nagad">Nagad Mobile Money</option>
+<option value="Bank Transfer">Bank Transfer</option>
+</select>
+</div>
+
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Payment Date & Time</label>
+<input type="datetime-local" id="billCollectDate" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+</div>
+
+<button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center">
+<i class="fa-solid fa-receipt mr-2"></i> Submit & Log Payment
+</button>
+</form>
+</div>
+
+<div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+<h3 class="font-bold text-slate-800 text-base flex items-center">
+<i class="fa-solid fa-history text-indigo-600 mr-2"></i> Billing Collection History
+</h3>
+<div class="relative w-full sm:w-64">
+<input type="text" id="billingHistorySearch" onkeyup="renderBillingHistory()" placeholder="Filter history..." class="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg">
+<i class="fa-solid fa-search absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+</div>
+</div>
+
+<div class="overflow-x-auto max-h-[450px] custom-scrollbar">
+<table class="w-full text-left text-xs text-slate-600">
+<thead class="bg-slate-50 uppercase font-semibold text-slate-500 border-b border-slate-200 sticky top-0">
+<tr>
+<th class="py-2.5 px-3">Date</th>
+<th class="py-2.5 px-3">Customer</th>
+<th class="py-2.5 px-3">Month/Year</th>
+<th class="py-2.5 px-3">Paid</th>
+<th class="py-2.5 px-3">Due</th>
+<th class="py-2.5 px-3">Method</th>
+<th class="py-2.5 px-3">Collected By</th>
+</tr>
+</thead>
+<tbody id="billingHistoryTable" class="divide-y divide-slate-100"></tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+
+<!-- TAB 6: ACTIVITY LOGS -->
+<section id="tab-activity-logs" class="tab-content admin-only hidden space-y-4">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="font-bold text-slate-800 text-base flex items-center">
+<i class="fa-solid fa-list-check text-indigo-600 mr-2"></i> System Activity Logs
+</h3>
+<button onclick="clearActivityLogs()" class="text-xs text-rose-600 font-semibold hover:underline">Clear Logs</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-xs text-slate-600">
+<thead class="bg-slate-50 uppercase text-slate-500 font-semibold border-b border-slate-200">
+<tr>
+<th class="py-2.5 px-3">Timestamp</th>
+<th class="py-2.5 px-3">User</th>
+<th class="py-2.5 px-3">Action Type</th>
+<th class="py-2.5 px-3">Details</th>
+</tr>
+</thead>
+<tbody id="activityLogsTable" class="divide-y divide-slate-100"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- TAB 7: ADMIN PANEL -->
+<section id="tab-admin-panel" class="tab-content admin-only hidden space-y-6 max-w-5xl mx-auto">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+<div class="border-b border-slate-200 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+<div>
+<h3 class="text-xl font-bold text-slate-800 flex items-center">
+<i class="fa-solid fa-user-shield text-purple-600 mr-2"></i> Admin & Manager Panel
+</h3>
+<p class="text-xs text-slate-500 mt-1">Manage system accounts, create new admins or managers.</p>
+</div>
+<button onclick="openAddUserModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center">
+<i class="fa-solid fa-user-plus mr-1.5"></i> Add System User
+</button>
+</div>
+
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-slate-600">
+<thead class="bg-slate-50 text-xs text-slate-500 uppercase font-semibold border-b border-slate-200">
+<tr>
+<th class="py-3 px-4">User Email / Username</th>
+<th class="py-3 px-4">Role</th>
+<th class="py-3 px-4">Password</th>
+<th class="py-3 px-4 text-center">Actions</th>
+</tr>
+</thead>
+<tbody id="systemUsersTable" class="divide-y divide-slate-100"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- TAB 8: GITHUB SETTINGS -->
+<section id="tab-github-settings" class="tab-content admin-only hidden max-w-3xl mx-auto space-y-6">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+<div class="border-b border-slate-200 pb-4">
+<h3 class="text-xl font-bold text-slate-800 flex items-center">
+<i class="fa-brands fa-github text-slate-900 mr-2.5 text-2xl"></i> GitHub JSON API Settings
+</h3>
+<p class="text-xs text-slate-500 mt-1">Automatically commit and push data changes to your GitHub Repository.</p>
+</div>
+
+<form id="githubConfigForm" onsubmit="saveGitHubConfig(event)" class="space-y-4">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">GitHub Personal Access Token (PAT) *</label>
+<input type="password" id="ghToken" placeholder="ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500">
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Repository Owner *</label>
+<input type="text" id="ghOwner" placeholder="e.g. shahidul-islam" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm">
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Repository Name *</label>
+<input type="text" id="ghRepo" placeholder="e.g. green-city-net-db" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm">
+</div>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">JSON Storage File Path *</label>
+<input type="text" id="ghPath" placeholder="data/db.json" value="data/db.json" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm">
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Target Branch *</label>
+<input type="text" id="ghBranch" placeholder="main" value="main" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm">
+</div>
+</div>
+
+<div class="pt-4 flex flex-wrap gap-3">
+<button type="submit" class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center">
+<i class="fa-solid fa-floppy-disk mr-2"></i> Save GitHub Config
+</button>
+<button type="button" onclick="testGitHubConnection()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition flex items-center">
+<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Test & Sync with GitHub
+</button>
+</div>
+</form>
+</div>
+</section>
+
+</div>
+
+<!-- Footer -->
+<footer class="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500 mt-auto">
+<p class="font-medium">
+Green City Net &copy; 2026 - All Rights Reserved | Developed By
+<a href="https://www.facebook.com/share/1EQwy5LQyG/?mibextid=wwXIfr" target="_blank" class="text-brand-600 font-bold hover:underline inline-flex items-center ml-1">
+Engr Md. Shahidul Islam <i class="fa-brands fa-facebook ml-1 text-blue-600 text-sm"></i>
+</a>
+</p>
+</footer>
+</main>
+</div>
+
+<!-- MODALS -->
+<!-- Login Modal -->
+<div id="loginModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-6">
+<div class="text-center space-y-2">
+<div class="w-14 h-14 bg-brand-600 text-white rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-lg shadow-brand-600/30">
+<i class="fa-solid fa-network-wired"></i>
+</div>
+<h3 class="text-2xl font-bold text-slate-800">Green City Net</h3>
+<p class="text-xs text-slate-500">Sign in to access ISP Billing System</p>
+</div>
+
+<form onsubmit="handleLogin(event)" class="space-y-4">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Username / Email</label>
+<input type="email" id="loginUsername" required placeholder="username@gcn.net" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500">
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password</label>
+<input type="password" id="loginPassword" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500">
+</div>
+
+<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
+<p class="font-bold text-slate-700">Demo Credentials:</p>
+<p>• Admin: <code class="text-brand-700 font-bold">shahidul@gcn.net</code> / <code class="text-brand-700 font-bold">gcn2011514</code></p>
+<p>• Manager: <code class="text-brand-700 font-bold">manager@gcn.net</code> / <code class="text-brand-700 font-bold">gcn2011514</code></p>
+</div>
+
+<button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-brand-600/30 transition">
+Sign In to Dashboard
+</button>
+</form>
+</div>
+</div>
+
+<!-- Edit Customer Modal -->
+<div id="editCustomerModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+<div class="flex justify-between items-center border-b pb-3">
+<h3 class="font-bold text-slate-800 text-lg">Edit Customer Information</h3>
+<button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600">
+<i class="fa-solid fa-xmark text-lg"></i>
+</button>
+</div>
+<form id="editCustomerForm" onsubmit="saveCustomerEdit(event)" class="space-y-4">
+<input type="hidden" id="editCustId">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Full Name</label>
+<input type="text" id="editCustName" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phone Number</label>
+<input type="tel" id="editCustPhone" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Address</label>
+<input type="text" id="editCustAddress" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Internet Package</label>
+<select id="editCustPackage" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">
+<option value="5 Mbps Home Standard">5 Mbps Home Standard</option>
+<option value="10 Mbps Turbo Speed">10 Mbps Turbo Speed</option>
+<option value="15 Mbps Family Special">15 Mbps Family Special</option>
+<option value="20 Mbps Gamer Ultimate">20 Mbps Gamer Ultimate</option>
+<option value="30 Mbps Corporate Pro">30 Mbps Corporate Pro</option>
+<option value="Custom Fiber Package">Custom Fiber Package</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Monthly Bill (৳)</label>
+<input type="number" id="editCustBill" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+</div>
+</div>
+<div class="flex justify-end space-x-2 pt-2">
+<button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold">Cancel</button>
+<button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold">Save Changes</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- Add/Edit User Modal -->
+<div id="addUserModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+<div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+<div class="flex justify-between items-center border-b pb-3">
+<h3 id="userModalTitle" class="font-bold text-slate-800 text-lg">Add New System User</h3>
+<button onclick="closeUserModal()" class="text-slate-400 hover:text-slate-600">
+<i class="fa-solid fa-xmark text-lg"></i>
+</button>
+</div>
+<form id="addUserForm" onsubmit="handleSaveUser(event)" class="space-y-4">
+<input type="hidden" id="userEditIndex" value="-1">
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Username / Email *</label>
+<input type="email" id="userEmail" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password *</label>
+<input type="text" id="userPassword" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-700 uppercase mb-1">Role Permission *</label>
+<select id="userRole" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">
+<option value="Admin">Admin (Full Access)</option>
+<option value="Manager">Manager (Bill Collection Only)</option>
+</select>
+</div>
+<div class="flex justify-end space-x-2 pt-2">
+<button type="button" onclick="closeUserModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold">Cancel</button>
+<button type="submit" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold">Save User Account</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- External Main JavaScript Logic -->
+<script src="js/app.js"></script>
+</body>
+</html>
